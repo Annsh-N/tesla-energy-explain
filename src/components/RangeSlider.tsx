@@ -95,15 +95,22 @@ export function RangeSlider({
           const latest = latestValuesRef.current;
           const deltaValue = (gestureState.dx / latest.usableTrackWidth) * latest.range;
           const rawNextStart = startValueAtGrantRef.current + deltaValue;
-          const stepped = snapToStep(rawNextStart, latest.step);
           const maxStart = latest.endValue - latest.minGap;
-          const clampedStart = clamp(stepped, latest.min, maxStart);
+          const clampedStart = clamp(Math.round(rawNextStart), latest.min, maxStart);
           onChange(clampedStart, latest.endValue);
         },
         onPanResponderRelease: () => {
+          const latest = latestValuesRef.current;
+          const maxStart = latest.endValue - latest.minGap;
+          const snappedStart = clamp(snapToStep(latest.startValue, latest.step), latest.min, maxStart);
+          onChange(snappedStart, latest.endValue);
           setIsStartDragging(false);
         },
         onPanResponderTerminate: () => {
+          const latest = latestValuesRef.current;
+          const maxStart = latest.endValue - latest.minGap;
+          const snappedStart = clamp(snapToStep(latest.startValue, latest.step), latest.min, maxStart);
+          onChange(snappedStart, latest.endValue);
           setIsStartDragging(false);
         },
       }),
@@ -123,15 +130,22 @@ export function RangeSlider({
           const latest = latestValuesRef.current;
           const deltaValue = (gestureState.dx / latest.usableTrackWidth) * latest.range;
           const rawNextEnd = endValueAtGrantRef.current + deltaValue;
-          const stepped = snapToStep(rawNextEnd, latest.step);
           const minEnd = latest.startValue + latest.minGap;
-          const clampedEnd = clamp(stepped, minEnd, latest.max);
+          const clampedEnd = clamp(Math.round(rawNextEnd), minEnd, latest.max);
           onChange(latest.startValue, clampedEnd);
         },
         onPanResponderRelease: () => {
+          const latest = latestValuesRef.current;
+          const minEnd = latest.startValue + latest.minGap;
+          const snappedEnd = clamp(snapToStep(latest.endValue, latest.step), minEnd, latest.max);
+          onChange(latest.startValue, snappedEnd);
           setIsEndDragging(false);
         },
         onPanResponderTerminate: () => {
+          const latest = latestValuesRef.current;
+          const minEnd = latest.startValue + latest.minGap;
+          const snappedEnd = clamp(snapToStep(latest.endValue, latest.step), minEnd, latest.max);
+          onChange(latest.startValue, snappedEnd);
           setIsEndDragging(false);
         },
       }),

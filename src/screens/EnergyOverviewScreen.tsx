@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { VictoryAxis, VictoryChart, VictoryLabel, VictoryLine } from "victory-native";
@@ -9,7 +9,7 @@ import { RangeSlider } from "../components/RangeSlider";
 import { Spacer } from "../components/Spacer";
 import { TeslaButton } from "../components/TeslaButton";
 import { TeslaHeader } from "../components/TeslaHeader";
-import { getSamplesInWindow, storyDayContext, storyDaySamples } from "../data/storyDay";
+import { getSamplesInWindow, storyDaySamples } from "../data/storyDay";
 import { colors, radius, spacing } from "../theme/tokens";
 import { hairlineWidth, theme, withOpacity } from "../theme/theme";
 import { formatWindow, minutesToLabel } from "../utils/time";
@@ -35,10 +35,65 @@ type ChartPoint = {
   y: number;
 };
 
+type SocChartProps = {
+  chartWidth: number;
+  socSeries: ChartPoint[];
+};
+
+function SocChart({ chartWidth, socSeries }: SocChartProps) {
+  return (
+    <VictoryChart
+      width={chartWidth}
+      height={CHART_HEIGHT}
+      domain={{ x: [0, MINUTES_PER_DAY], y: [0, 100] }}
+      padding={{
+        top: spacing.sm,
+        right: spacing.xs,
+        bottom: spacing.md,
+        left: 46,
+      }}
+    >
+      <VictoryAxis
+        dependentAxis
+        tickValues={[0, 50, 100]}
+        tickLabelComponent={<VictoryLabel dx={6} />}
+        style={{
+          axis: { stroke: "transparent" },
+          ticks: { stroke: "transparent" },
+          tickLabels: {
+            fill: colors.textTertiary,
+            fontSize: 10,
+            padding: spacing.xs,
+          },
+          grid: {
+            stroke: withOpacity(colors.divider, 0.8),
+            strokeWidth: hairlineWidth,
+          },
+        }}
+      />
+      <VictoryLine
+        data={socSeries}
+        interpolation="monotoneX"
+        style={{
+          data: {
+            stroke: colors.textPrimary,
+            strokeWidth: 2.2,
+          },
+        }}
+      />
+    </VictoryChart>
+  );
+}
+
+const MemoizedSocChart = memo(SocChart);
+
 export function EnergyOverviewScreen() {
   const { width: screenWidth } = useWindowDimensions();
-  const [startMin, setStartMin] = useState<number>(DEFAULT_START_MIN);
-  const [endMin, setEndMin] = useState<number>(DEFAULT_END_MIN);
+  const [range, setRange] = useState<{ startMin: number; endMin: number }>({
+    startMin: DEFAULT_START_MIN,
+    endMin: DEFAULT_END_MIN,
+  });
+  const { startMin, endMin } = range;
 
   const chartWidth = Math.max(CHART_MIN_WIDTH, screenWidth - spacing.xl * 2 - CHART_SIDE_PADDING * 2);
 
@@ -57,18 +112,15 @@ export function EnergyOverviewScreen() {
   const windowLabel = formatWindow(startMin, endMin);
   const explainTitle = `Explain ${windowLabel}`;
 
-  const peakStartPct = (storyDayContext.peakWindow.startMin / MINUTES_PER_DAY) * 100;
-  const peakWidthPct =
-    ((storyDayContext.peakWindow.endMin - storyDayContext.peakWindow.startMin) / MINUTES_PER_DAY) * 100;
-  const stormStartPct = (storyDayContext.stormWatchWindow.startMin / MINUTES_PER_DAY) * 100;
-  const stormWidthPct =
-    ((storyDayContext.stormWatchWindow.endMin - storyDayContext.stormWatchWindow.startMin) / MINUTES_PER_DAY) * 100;
   const selectedStartPct = (startMin / MINUTES_PER_DAY) * 100;
   const selectedWidthPct = ((endMin - startMin) / MINUTES_PER_DAY) * 100;
 
   const handleRangeChange = (nextStartMin: number, nextEndMin: number) => {
-    setStartMin(nextStartMin);
-    setEndMin(nextEndMin);
+    setRange((prev) =>
+      prev.startMin === nextStartMin && prev.endMin === nextEndMin
+        ? prev
+        : { startMin: nextStartMin, endMin: nextEndMin },
+    );
   };
 
   const handleExplainPress = () => {
@@ -116,65 +168,12 @@ export function EnergyOverviewScreen() {
             <View
               style={[
                 styles.chartBand,
-                styles.peakBand,
-                { left: `${peakStartPct}%` as `${number}%`, width: `${peakWidthPct}%` as `${number}%` },
-              ]}
-            />
-            <View
-              style={[
-                styles.chartBand,
-                styles.stormBand,
-                { left: `${stormStartPct}%` as `${number}%`, width: `${stormWidthPct}%` as `${number}%` },
-              ]}
-            />
-            <View
-              style={[
-                styles.chartBand,
                 styles.selectedWindowBand,
                 { left: `${selectedStartPct}%` as `${number}%`, width: `${selectedWidthPct}%` as `${number}%` },
               ]}
             />
 
-            <VictoryChart
-              width={chartWidth}
-              height={CHART_HEIGHT}
-              domain={{ x: [0, MINUTES_PER_DAY], y: [0, 100] }}
-              padding={{
-                top: spacing.sm,
-                right: spacing.xs,
-                bottom: spacing.md,
-                left: 46,
-              }}
-            >
-              <VictoryAxis
-                dependentAxis
-                tickValues={[0, 50, 100]}
-                tickLabelComponent={<VictoryLabel dx={6} />}
-                style={{
-                  axis: { stroke: "transparent" },
-                  ticks: { stroke: "transparent" },
-                  tickLabels: {
-                    fill: colors.textTertiary,
-                    fontSize: 10,
-                    padding: spacing.xs,
-                  },
-                  grid: {
-                    stroke: withOpacity(colors.divider, 0.8),
-                    strokeWidth: hairlineWidth,
-                  },
-                }}
-              />
-              <VictoryLine
-                data={socSeries}
-                interpolation="monotoneX"
-                style={{
-                  data: {
-                    stroke: colors.textPrimary,
-                    strokeWidth: 2.2,
-                  },
-                }}
-              />
-            </VictoryChart>
+            <MemoizedSocChart chartWidth={chartWidth} socSeries={socSeries} />
           </View>
 
           <View style={styles.timeMarkersRow}>
@@ -271,14 +270,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 1,
   },
-  peakBand: {
-    backgroundColor: withOpacity(colors.statusWarn, 0.12),
-  },
-  stormBand: {
-    backgroundColor: withOpacity(colors.statusBad, 0.12),
-  },
   selectedWindowBand: {
-    backgroundColor: withOpacity(colors.textPrimary, 0.08),
+    backgroundColor: withOpacity(colors.statusGood, 0.16),
   },
   timeMarkersRow: {
     flexDirection: "row",
