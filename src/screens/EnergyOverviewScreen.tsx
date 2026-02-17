@@ -18,6 +18,8 @@ const MINUTES_PER_DAY = 24 * 60;
 const CHART_HEIGHT = 200;
 const CHART_MIN_WIDTH = 280;
 const CHART_SIDE_PADDING = spacing.lg;
+const CHART_Y_AXIS_LEFT_PADDING = 30;
+const CHART_Y_AXIS_LABEL_DX = 2;
 const WINDOW_STEP_MINUTES = 5;
 const MIN_WINDOW_MINUTES = 30;
 const DEFAULT_START_MIN = 17 * 60;
@@ -51,13 +53,13 @@ function SocChart({ chartWidth, socSeries }: SocChartProps) {
         top: spacing.sm,
         right: spacing.xs,
         bottom: spacing.md,
-        left: 46,
+        left: CHART_Y_AXIS_LEFT_PADDING,
       }}
     >
       <VictoryAxis
         dependentAxis
         tickValues={[0, 50, 100]}
-        tickLabelComponent={<VictoryLabel dx={6} />}
+        tickLabelComponent={<VictoryLabel dx={CHART_Y_AXIS_LABEL_DX} />}
         style={{
           axis: { stroke: "transparent" },
           ticks: { stroke: "transparent" },
