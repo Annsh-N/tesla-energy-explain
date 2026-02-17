@@ -1,7 +1,7 @@
 import { memo, useMemo, useState } from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { VictoryAxis, VictoryChart, VictoryLabel, VictoryLine } from "victory-native";
+import { VictoryChart, VictoryLine } from "victory-native";
 import { Card } from "../components/Card";
 import { Divider } from "../components/Divider";
 import { Pill } from "../components/Pill";
@@ -18,8 +18,8 @@ const MINUTES_PER_DAY = 24 * 60;
 const CHART_HEIGHT = 200;
 const CHART_MIN_WIDTH = 280;
 const CHART_SIDE_PADDING = spacing.lg;
-const CHART_Y_AXIS_LEFT_PADDING = 30;
-const CHART_Y_AXIS_LABEL_DX = 2;
+const CHART_Y_LABEL_WIDTH = 24;
+const CHART_Y_LABEL_GAP = spacing.xs;
 const WINDOW_STEP_MINUTES = 5;
 const MIN_WINDOW_MINUTES = 30;
 const DEFAULT_START_MIN = 17 * 60;
@@ -51,29 +51,11 @@ function SocChart({ chartWidth, socSeries }: SocChartProps) {
       domain={{ x: [0, MINUTES_PER_DAY], y: [0, 100] }}
       padding={{
         top: spacing.sm,
-        right: spacing.xs,
+        right: 0,
         bottom: spacing.md,
-        left: CHART_Y_AXIS_LEFT_PADDING,
+        left: 0,
       }}
     >
-      <VictoryAxis
-        dependentAxis
-        tickValues={[0, 50, 100]}
-        tickLabelComponent={<VictoryLabel dx={CHART_Y_AXIS_LABEL_DX} />}
-        style={{
-          axis: { stroke: "transparent" },
-          ticks: { stroke: "transparent" },
-          tickLabels: {
-            fill: colors.textTertiary,
-            fontSize: 10,
-            padding: spacing.xs,
-          },
-          grid: {
-            stroke: withOpacity(colors.divider, 0.8),
-            strokeWidth: hairlineWidth,
-          },
-        }}
-      />
       <VictoryLine
         data={socSeries}
         interpolation="monotoneX"
@@ -99,9 +81,17 @@ export function EnergyOverviewScreen() {
   const { startMin, endMin } = range;
 
   const chartWidth = Math.max(CHART_MIN_WIDTH, screenWidth - spacing.xl * 2 - CHART_SIDE_PADDING * 2);
+  const chartPlotWidth = Math.max(1, chartWidth - CHART_Y_LABEL_WIDTH - CHART_Y_LABEL_GAP);
 
   const socSeries: ChartPoint[] = useMemo(
-    () => storyDaySamples.map((sample) => ({ x: sample.ts, y: sample.socPct })),
+    () => {
+      const points = storyDaySamples.map((sample) => ({ x: sample.ts, y: sample.socPct }));
+      const lastPoint = points[points.length - 1];
+      if (!lastPoint) {
+        return points;
+      }
+      return [...points, { x: MINUTES_PER_DAY, y: lastPoint.y }];
+    },
     [],
   );
 
@@ -165,19 +155,31 @@ export function EnergyOverviewScreen() {
           <Text style={styles.selfPoweredLabel}>State of charge</Text>
 
           <Spacer height={spacing.md} />
-          <View style={[styles.chartWrapper, { width: chartWidth }]}>
-            <View
-              style={[
-                styles.chartBand,
-                styles.selectedWindowBand,
-                { left: `${selectedStartPct}%` as `${number}%`, width: `${selectedWidthPct}%` as `${number}%` },
-              ]}
-            />
+          <View style={styles.chartRow}>
+            <View style={styles.yAxisLabelColumn}>
+              <Text style={styles.yAxisLabel}>100</Text>
+              <Text style={styles.yAxisLabel}>50</Text>
+              <Text style={styles.yAxisLabel}>0</Text>
+            </View>
 
-            <MemoizedSocChart chartWidth={chartWidth} socSeries={socSeries} />
+            <View style={[styles.chartWrapper, { width: chartPlotWidth }]}>
+              <View style={[styles.gridline, styles.gridlineTop]} />
+              <View style={[styles.gridline, styles.gridlineMiddle]} />
+              <View style={[styles.gridline, styles.gridlineBottom]} />
+
+              <View
+                style={[
+                  styles.chartBand,
+                  styles.selectedWindowBand,
+                  { left: `${selectedStartPct}%` as `${number}%`, width: `${selectedWidthPct}%` as `${number}%` },
+                ]}
+              />
+
+              <MemoizedSocChart chartWidth={chartPlotWidth} socSeries={socSeries} />
+            </View>
           </View>
 
-          <View style={styles.timeMarkersRow}>
+          <View style={[styles.timeMarkersRow, { marginLeft: CHART_Y_LABEL_WIDTH + CHART_Y_LABEL_GAP, width: chartPlotWidth }]}>
             {TIME_MARKERS.map((marker) => (
               <Text key={marker.minute} style={styles.timeMarkerText}>
                 {marker.label}
@@ -256,6 +258,23 @@ const styles = StyleSheet.create({
   selfPoweredLabel: {
     ...theme.typography.label,
   },
+  chartRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
+  yAxisLabelColumn: {
+    width: CHART_Y_LABEL_WIDTH,
+    height: CHART_HEIGHT,
+    marginRight: CHART_Y_LABEL_GAP,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    justifyContent: "space-between",
+  },
+  yAxisLabel: {
+    ...theme.typography.caption,
+    textAlign: "right",
+    color: colors.textTertiary,
+  },
   chartWrapper: {
     height: CHART_HEIGHT,
     backgroundColor: colors.surface3,
@@ -271,6 +290,24 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 1,
   },
+  gridline: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: hairlineWidth,
+    backgroundColor: withOpacity(colors.divider, 0.8),
+    zIndex: 0,
+  },
+  gridlineTop: {
+    top: spacing.sm,
+  },
+  gridlineMiddle: {
+    top: "50%",
+    transform: [{ translateY: -0.5 }],
+  },
+  gridlineBottom: {
+    bottom: spacing.md,
+  },
   selectedWindowBand: {
     backgroundColor: withOpacity(colors.statusGood, 0.16),
   },
@@ -278,7 +315,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: spacing.xs,
-    paddingHorizontal: spacing.xs,
   },
   timeMarkerText: {
     ...theme.typography.caption,
