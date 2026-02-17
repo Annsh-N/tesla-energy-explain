@@ -1,7 +1,10 @@
 import { memo, useMemo, useState } from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { VictoryChart, VictoryLine } from "victory-native";
+import type { RootStackParamList } from "../AppNavigator";
 import { Card } from "../components/Card";
 import { Divider } from "../components/Divider";
 import { Pill } from "../components/Pill";
@@ -18,7 +21,7 @@ const MINUTES_PER_DAY = 24 * 60;
 const CHART_HEIGHT = 200;
 const CHART_MIN_WIDTH = 280;
 const CHART_SIDE_PADDING = spacing.lg;
-const CHART_Y_LABEL_WIDTH = 24;
+const CHART_Y_LABEL_WIDTH = 22;
 const CHART_Y_LABEL_GAP = spacing.xs;
 const WINDOW_STEP_MINUTES = 5;
 const MIN_WINDOW_MINUTES = 30;
@@ -73,6 +76,7 @@ function SocChart({ chartWidth, socSeries }: SocChartProps) {
 const MemoizedSocChart = memo(SocChart);
 
 export function EnergyOverviewScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width: screenWidth } = useWindowDimensions();
   const [range, setRange] = useState<{ startMin: number; endMin: number }>({
     startMin: DEFAULT_START_MIN,
@@ -115,11 +119,10 @@ export function EnergyOverviewScreen() {
   };
 
   const handleExplainPress = () => {
-    // Step 3 scope: log window only, no navigation yet.
-    console.log({
+    navigation.navigate("Explain", {
       startMin,
       endMin,
-      label: windowLabel,
+      dayDateLabel: "Feb 17",
     });
   };
 

@@ -10,6 +10,8 @@ type IconName = ComponentProps<typeof Ionicons>["name"];
 type TeslaHeaderProps = {
   title: string;
   size?: "title" | "subtitle";
+  leftIconName?: IconName;
+  onLeftPress?: () => void;
   rightIconName?: IconName;
   onRightPress?: () => void;
   showDivider?: boolean;
@@ -23,6 +25,8 @@ const iconHitArea = 32;
 export function TeslaHeader({
   title,
   size = "subtitle",
+  leftIconName,
+  onLeftPress,
   rightIconName,
   onRightPress,
   showDivider = false,
@@ -31,7 +35,14 @@ export function TeslaHeader({
   return (
     <View style={[styles.wrapper, style]}>
       <View style={styles.row}>
-        <Text style={size === "title" ? styles.title : styles.subtitle}>{title}</Text>
+        <View style={styles.leftContainer}>
+          {leftIconName ? (
+            <Pressable onPress={onLeftPress} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed, styles.leftIconButton]}>
+              <Ionicons name={leftIconName} size={iconSize} color={colors.icon} />
+            </Pressable>
+          ) : null}
+          <Text style={size === "title" ? styles.title : styles.subtitle}>{title}</Text>
+        </View>
         {rightIconName ? (
           <Pressable onPress={onRightPress} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
             <Ionicons name={rightIconName} size={iconSize} color={colors.icon} />
@@ -54,6 +65,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  leftContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 1,
+  },
   title: {
     ...typography.title,
   },
@@ -69,6 +85,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.divider,
+  },
+  leftIconButton: {
+    marginRight: 10,
   },
   pressed: {
     opacity: 0.85,
