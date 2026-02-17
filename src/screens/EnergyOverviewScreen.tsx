@@ -9,7 +9,7 @@ import { RangeSlider } from "../components/RangeSlider";
 import { Spacer } from "../components/Spacer";
 import { TeslaButton } from "../components/TeslaButton";
 import { TeslaHeader } from "../components/TeslaHeader";
-import { getSamplesInWindow, storyDaySamples } from "../data/storyDay";
+import { storyDaySamples } from "../data/storyDay";
 import { colors, radius, spacing } from "../theme/tokens";
 import { hairlineWidth, theme, withOpacity } from "../theme/theme";
 import { formatWindow, minutesToLabel } from "../utils/time";
@@ -29,6 +29,7 @@ const TIME_MARKERS = [
   { minute: 12 * 60, label: "12PM" },
   { minute: 18 * 60, label: "6PM" },
 ] as const;
+const SAMPLE_STEP_MINUTES = 5;
 
 type ChartPoint = {
   x: number;
@@ -102,13 +103,11 @@ export function EnergyOverviewScreen() {
     [],
   );
 
-  const selectedSamples = useMemo(
-    () => getSamplesInWindow(startMin, endMin),
-    [startMin, endMin],
+  const selectedSampleIndex = Math.min(
+    storyDaySamples.length - 1,
+    Math.max(0, Math.floor(endMin / SAMPLE_STEP_MINUTES) - 1),
   );
-
-  const lastSelectedSample = selectedSamples[selectedSamples.length - 1];
-  const selectedSoc = lastSelectedSample?.socPct ?? storyDaySamples[storyDaySamples.length - 1]?.socPct ?? 0;
+  const selectedSoc = storyDaySamples[selectedSampleIndex]?.socPct ?? 0;
   const windowLabel = formatWindow(startMin, endMin);
   const explainTitle = `Explain ${windowLabel}`;
 

@@ -4,6 +4,7 @@ import {
   NavigationContainer,
   Theme as NavigationTheme,
 } from "@react-navigation/native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppNavigator } from "./src/AppNavigator";
 import { theme } from "./src/theme/theme";
 
@@ -22,9 +23,11 @@ const navigationTheme: NavigationTheme = {
 
 export default function App() {
   return (
-    <NavigationContainer theme={navigationTheme}>
-      <StatusBar style="light" />
-      <AppNavigator />
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer theme={navigationTheme}>
+        <StatusBar style="light" />
+        <AppNavigator />
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
