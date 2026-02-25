@@ -48,6 +48,10 @@ const eventTypeLabel: Record<ExplainEvent["type"], string> = {
   info: "Info",
 };
 
+function clampMinute(minute: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, minute));
+}
+
 function overlap(startMin: number, endMin: number, windowStart: number, windowEnd: number): boolean {
   return Math.max(startMin, windowStart) < Math.min(endMin, windowEnd);
 }
@@ -56,6 +60,13 @@ function formatSigned(value: number, decimals = 1): string {
   const rounded = Number(value.toFixed(decimals));
   const sign = rounded > 0 ? "+" : "";
   return `${sign}${rounded}`;
+}
+
+function formatEventRange(startMin: number, endMin: number): string {
+  if (startMin === endMin) {
+    return minutesToLabel(startMin);
+  }
+  return formatWindow(startMin, endMin);
 }
 
 function buildExpectedChanges(
@@ -129,6 +140,30 @@ export function ExplainScreen({ navigation, route }: Props) {
     [endMin, explainContext, startMin],
   );
 
+  const timelineEventsWithWindow = useMemo(
+    () =>
+      timelineEvents.map((event, index) => {
+        const nextEventTs = timelineEvents[index + 1]?.tsMin ?? endMin;
+        const segmentStartMin = clampMinute(event.tsMin, startMin, endMin);
+        const segmentEndMin = clampMinute(nextEventTs, startMin, endMin);
+        const safeStartMin = Math.min(segmentStartMin, segmentEndMin);
+        const safeEndMin = Math.max(segmentStartMin, segmentEndMin);
+        const segmentSamples = getWindowSamples(storyDaySamples, safeStartMin, safeEndMin);
+        const socDeltaPct =
+          segmentSamples.length > 1
+            ? Number((segmentSamples[segmentSamples.length - 1].socPct - segmentSamples[0].socPct).toFixed(1))
+            : 0;
+
+        return {
+          ...event,
+          segmentStartMin: safeStartMin,
+          segmentEndMin: safeEndMin,
+          socDeltaPct,
+        };
+      }),
+    [endMin, startMin, timelineEvents],
+  );
+
   const replayResult = useMemo(
     () =>
       replayWindow(storyDaySamples, explainContext, startMin, endMin, {
@@ -179,7 +214,7 @@ export function ExplainScreen({ navigation, route }: Props) {
         <Spacer height={spacing.md} />
 
         <FlatList
-          data={timelineEvents}
+          data={timelineEventsWithWindow}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.timelineContent}
@@ -194,7 +229,12 @@ export function ExplainScreen({ navigation, route }: Props) {
                 <Card style={styles.eventCard}>
                   <View style={styles.eventTopRow}>
                     <View style={styles.eventHeading}>
-                      <Text style={styles.eventTime}>{minutesToLabel(item.tsMin)}</Text>
+                      <Text style={styles.eventTime}>
+                        {`${formatEventRange(item.segmentStartMin, item.segmentEndMin)}  \u2022  SOC ${formatSigned(
+                          item.socDeltaPct,
+                          1,
+                        )}%`}
+                      </Text>
                       <Text style={styles.eventTitle}>{item.title}</Text>
                     </View>
                     <View style={styles.eventMeta}>

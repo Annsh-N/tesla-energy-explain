@@ -7,6 +7,7 @@ import { VictoryChart, VictoryLine } from "victory-native";
 import type { RootStackParamList } from "../AppNavigator";
 import { Card } from "../components/Card";
 import { Divider } from "../components/Divider";
+import { InfoModal } from "../components/InfoModal";
 import { Pill } from "../components/Pill";
 import { RangeSlider } from "../components/RangeSlider";
 import { Spacer } from "../components/Spacer";
@@ -78,6 +79,7 @@ const MemoizedSocChart = memo(SocChart);
 export function EnergyOverviewScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width: screenWidth } = useWindowDimensions();
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [range, setRange] = useState<{ startMin: number; endMin: number }>({
     startMin: DEFAULT_START_MIN,
     endMin: DEFAULT_END_MIN,
@@ -129,7 +131,12 @@ export function EnergyOverviewScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
       <View style={styles.container}>
-        <TeslaHeader title="Energy" size="title" rightIconName="information-circle-outline" />
+        <TeslaHeader
+          title="Energy"
+          size="title"
+          rightIconName="information-circle-outline"
+          onRightPress={() => setIsInfoOpen(true)}
+        />
 
         <Spacer height={spacing.md} />
 
@@ -220,6 +227,8 @@ export function EnergyOverviewScreen() {
 
         <TeslaButton title={explainTitle} onPress={handleExplainPress} />
       </View>
+
+      <InfoModal visible={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
     </SafeAreaView>
   );
 }
