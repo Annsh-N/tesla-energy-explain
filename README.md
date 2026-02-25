@@ -6,6 +6,20 @@ The core idea: users can select a time window from an energy day chart, tap **Ex
 
 ---
 
+## Screenshots
+![Energy Overview](./demo/overview.png)
+![Explain Timeline](./demo/explain.png)
+![What-If Replay](./demo/what-if.png)
+
+---
+
+## Demo Video
+
+Watch the walkthrough here:  
+`./demo/Energy-Explain-Demo.mp4`
+
+---
+
 ## Live Demo (Expo Go)
 
 **Expo Go link (iOS/Android):**  
@@ -22,12 +36,6 @@ The core idea: users can select a time window from an energy day chart, tap **Ex
 
 ---
 
-## Demo Video
-
-Watch the walkthrough here:  
-`./demo-video.mp4`
-
----
 
 ## What the app does
 
