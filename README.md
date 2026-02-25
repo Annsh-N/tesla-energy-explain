@@ -7,9 +7,9 @@ The core idea: users can select a time window from an energy day chart, tap **Ex
 ---
 
 ## Screenshots
-![Energy Overview](./demo/overview.png)
-![Explain Timeline](./demo/explain.png)
-![What-If Replay](./demo/what-if.png)
+![Energy Overview](./demo/overview.PNG)
+![Explain Timeline](./demo/explain.PNG)
+![What-If Replay](./demo/what-if.PNG)
 
 ---
 
