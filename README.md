@@ -2,7 +2,7 @@
 
 A lightweight, Tesla-style mobile demo that explores an **explainability layer** for the Tesla Energy app.
 
-The core idea: users can select a time window from an energy day chart, tap **Explain**, and see a **timeline of system decisions** with **plausible reason codes + evidence**. A **What-If (Replay)** section lets users adjust key parameters (Backup Reserve and Mode) to see how outcomes would change for that same window.
+The core idea: users can select a time window from an energy day chart, tap **Explain**, and see a **timeline of system decisions** with **plausible reasons + evidence**. A **What-If (Replay)** section lets users adjust key parameters (Backup Reserve and Mode) to see how outcomes would change for that same window.
 
 ---
 
@@ -27,22 +27,19 @@ The core idea: users can select a time window from an energy day chart, tap **Ex
 Watch the walkthrough here:  
 `./demo-video.mp4`
 
-(Replace the filename above if you use a different video name.)
-
 ---
 
 ## What the app does
 
 ### 1) Energy Overview
-- Displays a **realistic one-day energy dataset** with a Tesla-like dark UI.
+- Displays **daily energy usage** as a chart.
 - Lets you select a **time window** using a dual-handle range control.
-- The **Explain** button updates to match the selected window (example: “Explain 5:00–7:00 PM”).
 
 ### 2) Explain Screen
 - Shows a **timeline of events** inside the selected window.
 - Each event expands into:
   - **What happened** (plain-language description)
-  - **Why** (reason code + confidence)
+  - **Why** (reason + confidence)
   - **Evidence** (simple, computed facts from the selected window)
 
 ### 3) What-If (Replay)
@@ -59,15 +56,15 @@ Watch the walkthrough here:
 
 ## Tech Stack
 - Expo + React Native + TypeScript
-- Tesla-style theming (dark surfaces, subtle dividers, rounded cards, minimal UI)
-- A deterministic “story day” dataset at 5-minute granularity for realism
+- Tesla-style theming
+- A deterministic one-day dataset at 5-minute granularity for realisstic demo
 
 ---
 
 ## Local Development
 
 ### Prerequisites
-- Node.js (LTS recommended)
+- Node.js
 - npm
 
 ### Install & run
